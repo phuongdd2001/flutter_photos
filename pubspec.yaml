@@ -40,6 +40,7 @@ dependencies:
   flutter_bloc: ^7.0.0
   http: ^0.13.3
   url_launcher: ^6.0.3
+  gallery_saver: ^2.3.2
 
 dev_dependencies:
   flutter_test:

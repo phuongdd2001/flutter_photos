@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_photos/models/models.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PhotoViewerScreen extends StatefulWidget {
@@ -66,6 +67,14 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                   ),
                 ),
               ),
+              ElevatedButton(
+                onPressed: () async {
+                  print('davap12 ${photo.url}');
+                   // _saveNetworkImage();
+                  await GallerySaver.saveImage("https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2");
+                },
+                child: Text("download webp(only Android)"),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 16.0,
@@ -126,5 +135,11 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
         },
       ),
     );
+  }
+
+  void _saveNetworkImage() async {
+    String path =
+        'https://image.shutterstock.com/image-photo/montreal-canada-july-11-2019-600w-1450023539.jpg';
+    GallerySaver.saveImage(path);
   }
 }
