@@ -72,10 +72,22 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  // get link image
                   await _askPermission();
                   var response = await Dio().get(photo.url, options: Options(responseType: ResponseType.bytes));
                   final result =
                   await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
+
+                  // image success open snackbar
+                  if(result != '') {
+                    final snackBar = SnackBar(
+                    backgroundColor: Colors.green,
+                    content: const Text('Download image success'),
+                    duration: Duration(seconds: 1),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
+                  
                 },
                 child: Text("download webp(only Android)"),
               ),
@@ -133,7 +145,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           );
         },
