@@ -1,13 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_photos/models/models.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:typed_data';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PhotoViewerScreen extends StatefulWidget {
   final List<Photo> photos;
   final int currentIndex;
+
 
   const PhotoViewerScreen({
     Key? key,
@@ -69,9 +72,10 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  print('davap12 ${photo.url}');
-                   // _saveNetworkImage();
-                  await GallerySaver.saveImage("https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2");
+                  await _askPermission();
+                  var response = await Dio().get(photo.url, options: Options(responseType: ResponseType.bytes));
+                  final result =
+                  await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
                 },
                 child: Text("download webp(only Android)"),
               ),
@@ -137,9 +141,23 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     );
   }
 
-  void _saveNetworkImage() async {
-    String path =
-        'https://image.shutterstock.com/image-photo/montreal-canada-july-11-2019-600w-1450023539.jpg';
-    GallerySaver.saveImage(path);
+  // _save() async {
+  //   print("sahil");
+  //   await _askPermission();
+  //   var response = await Dio().get("https://images.unsplash.com/photo-1587620962725-abab7fe55159?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0OTU0OTh8MHwxfHNlYXJjaHwxfHxwcm9ncmFtbWluZ3xlbnwwfHx8fDE2OTMzNzE3MDl8MA&ixlib=rb-4.0.3&q=80&w=1080", options: Options(responseType: ResponseType.bytes));
+  //   final result =
+  //   await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
+  //   print(result);
+  // }
+
+  _askPermission() async {
+    var status = await Permission.storage.status;
+    if (status.isPermanentlyDenied) {
+      Navigator.pop(context);
+    }
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.storage,
+    ].request();
+    print(statuses[Permission.storage]);
   }
 }
