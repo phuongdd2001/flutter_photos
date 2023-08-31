@@ -8,8 +8,6 @@ import 'dart:typed_data';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-enum SampleItem { itemOne, itemTwo, itemThree }
-
 class PhotoViewerScreen extends StatefulWidget {
   final List<Photo> photos;
   final int currentIndex;
@@ -26,7 +24,6 @@ class PhotoViewerScreen extends StatefulWidget {
 
 class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   late PageController _pageController;
-  SampleItem? selectedMenu;
   late int indexPage;
 
   @override
