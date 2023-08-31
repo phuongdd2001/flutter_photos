@@ -49,5 +49,9 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<key>NSPhotoLibraryAddUsageDescription</key>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>recognize speech</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Need microphone access for uploading audio</string>
 </dict>
 </plist>

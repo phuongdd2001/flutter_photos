@@ -1,7 +1,9 @@
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_photos/blocs/blocs.dart';
 import 'package:flutter_photos/widgets/widgets.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class PhotosScreen extends StatefulWidget {
   @override
@@ -12,14 +14,16 @@ class _PhotosScreenState extends State<PhotosScreen> {
   late ScrollController _scrollController;
   final TextEditingController text = TextEditingController();
   int order = -1;
-
-
   List<String> orders = [
     "Conan",
     "Naruto",
     "One piece",
     "Batman",
   ];
+
+//  voice
+  stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
 
   @override
   void initState() {
@@ -33,6 +37,7 @@ class _PhotosScreenState extends State<PhotosScreen> {
           context.read<PhotosBloc>().add(PhotosPaginate());
         }
       });
+    _speech = stt.SpeechToText();
   }
 
   @override
@@ -108,6 +113,22 @@ class _PhotosScreenState extends State<PhotosScreen> {
                                   order = -1;
                                 });
                               }),
+                          // prefixIcon: AvatarGlow(
+                          //   animate: _isListening,
+                          //   glowColor: Theme.of(context).primaryColor,
+                          //   endRadius: 75.0,
+                          //   duration: const Duration(milliseconds: 2000),
+                          //   repeatPauseDuration: const Duration(milliseconds: 100),
+                          //   repeat: true,
+                          //   child: FloatingActionButton(
+                          //     onPressed: _listen,
+                          //     child: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                          //   ),
+                          // ),
+                          prefixIcon: IconButton(
+                                onPressed: _listen,
+                                icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                              ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: BorderSide(
@@ -207,8 +228,28 @@ class _PhotosScreenState extends State<PhotosScreen> {
             );
           }),
     );
+  }
 
-
-
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            text.text = val.recognizedWords;
+            // if (val.hasConfidenceRating && val.confidence > 0) {
+            //   _confidence = val.confidence;
+            // }
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 }
