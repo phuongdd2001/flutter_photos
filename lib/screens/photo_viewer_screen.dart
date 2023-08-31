@@ -1,16 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_photos/models/models.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:typed_data';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+enum SampleItem { itemOne, itemTwo, itemThree }
+
 class PhotoViewerScreen extends StatefulWidget {
   final List<Photo> photos;
   final int currentIndex;
-
 
   const PhotoViewerScreen({
     Key? key,
@@ -24,11 +26,14 @@ class PhotoViewerScreen extends StatefulWidget {
 
 class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   late PageController _pageController;
+  SampleItem? selectedMenu;
+  late int indexPage;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.currentIndex);
+    this.indexPage = widget.currentIndex;
   }
 
   @override
@@ -42,13 +47,99 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
+      // appBar: AppBar(
+      //   elevation: 0,
+      //   backgroundColor: Colors.transparent,
+      // ),
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
+        actions: [
+          MenuAnchor(
+            builder: (BuildContext context, MenuController controller,
+                Widget? child) {
+              return IconButton(
+                onPressed: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                icon: const Icon(Icons.more_vert),
+                tooltip: 'Show menu',
+              );
+            },
+            menuChildren: [
+              MenuItemButton(
+                onPressed: () async {
+                  final photo = widget.photos[this.indexPage];
+                  // get link image
+                  await _askPermission();
+                  var response = await Dio().get(photo.url,
+                      options: Options(responseType: ResponseType.bytes));
+                  final result = await ImageGallerySaver.saveImage(
+                      Uint8List.fromList(response.data));
+
+                  // image success open snackbar
+                  if (result != null) {
+                    final snackBar = SnackBar(
+                      backgroundColor: Colors.green,
+                      content: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(
+                          Icons.download_outlined,
+                          color: Colors.white,
+                        ),
+                        SizedBox(
+                          width: 5.0,
+                        ),
+                        Text('Download image success'),
+                      ],
+                    ),
+
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
+                },
+                child: Text('Download image'),
+                leadingIcon: Icon(Icons.download_outlined),
+              ),
+              MenuItemButton(
+                onPressed: () {
+                  final photo = widget.photos[this.indexPage];
+                  if (photo != null) {
+                    Clipboard.setData(new ClipboardData(text: photo.url));
+                    final snackBar = SnackBar(
+                      backgroundColor: Colors.green,
+                      content: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.copy,
+                            color: Colors.white,
+                          ),
+                          SizedBox(
+                            width: 5.0,
+                          ),
+                          Text('Copy link image success'),
+                        ],
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
+                },
+                child: Text('Copy link'),
+                leadingIcon: Icon(Icons.copy),
+              ),
+            ],
+          ),
+        ],
       ),
       body: PageView.builder(
         controller: _pageController,
         itemCount: widget.photos.length,
+        onPageChanged: _onPageViewChange,
         itemBuilder: (context, index) {
           final photo = widget.photos[index];
           return Column(
@@ -69,27 +160,6 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                     ),
                   ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  // get link image
-                  await _askPermission();
-                  var response = await Dio().get(photo.url, options: Options(responseType: ResponseType.bytes));
-                  final result =
-                  await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
-
-                  // image success open snackbar
-                  if(result != '') {
-                    final snackBar = SnackBar(
-                    backgroundColor: Colors.green,
-                    content: const Text('Download image success'),
-                    duration: Duration(seconds: 1),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                  
-                },
-                child: Text("download webp(only Android)"),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -171,5 +241,9 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
       Permission.storage,
     ].request();
     print(statuses[Permission.storage]);
+  }
+
+  _onPageViewChange(int page) {
+    this.indexPage = page;
   }
 }
